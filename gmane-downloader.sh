@@ -6,13 +6,13 @@
 # Required parameters are: 
 #   - <gmane mailing list name> (e.g. gmane.org.user-groups.rlug.general)
 #   - start 
-#   - step 
+#   - end 
 
 if [ -n "$1" ]
 then 
     MLIST=$1;
 else
-    echo "Usage: $0 <gmane mailing list> [start] [chunksize]\n";
+    echo "Usage: $0 <gmane mailing list> [start] [end]\n";
     exit 1;
 fi
 
@@ -27,24 +27,28 @@ fi
 
 if [ -n "$3" ]
 then
-    STEP=$3 
+    END=$3 
     echo "Downloading $STEP messages at a time";
 else
-    STEP=5000
+    END=500000
     echo "Stepping not suppied, defaulting to $STEP";
 fi
 
 echo "Begin downlod from list $MLIST messages: $START -> $STEP";
 
+#set the step to 5000, any larger and we might make the server kill the link
+STEP=5000
+
 mkdir "$MLIST";
 cd "$MLIST"
-for (( i=$START; i<=$300000; i+=$STEP )); do
+for (( i=$START; i<=$END; i+=$STEP )); do
        s=$(( $i + $STEP ));
     wget --output-document="$s" "http://download.gmane.org/$MLIST/$i/$s";
     FSIZE=`stat -c %s $s`
     if [[ "$FSIZE" -eq "0" ]]
     then
         echo "Done!";
+	rm $s;
         exit 0;
     fi
 done
